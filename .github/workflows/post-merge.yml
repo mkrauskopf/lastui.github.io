@@ -1,0 +1,28 @@
+name: post-merge trigger
+
+on: push
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-20.04
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: 'latest'
+
+      - run: cargo install mdbook-svgbob
+
+      - run: make
+        
+      - name: Deploy
+        uses: stefanzweifel/git-auto-commit-action@v4
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          commit_message: ${{ github.event.head_commit.message }}
